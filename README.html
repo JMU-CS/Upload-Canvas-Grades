@@ -1,0 +1,25 @@
+<p>Utilities for offline Canvas and Web-CAT grading. All scripts will show usage information when executed with no arguments. Running with the <code>-h</code> flag will show more detailed help information.</p>
+<h2 id="generate_form.py"><code>generate_form.py</code></h2>
+<p>This script generates a skeleton XML grade submission form from a Canvas .csv grade file.</p>
+<p>The generated forms will contain a <code>grade</code> element for each student. The numeric score should be set in the <code>score</code> attribute. Any grading comments should be placed between the open and close <code>grade</code> tags.</p>
+<div class="sourceCode"><pre class="sourceCode xml"><code class="sourceCode xml">    <span class="kw">&lt;grade</span><span class="ot"> name=</span><span class="st">&quot;STUDENT NAME&quot;</span><span class="ot"> eid=</span><span class="st">&quot;student_eid&quot;</span><span class="ot"> canvas_id=</span><span class="st">&quot;9999999&quot;</span>
+<span class="ot">       score=</span><span class="st">&quot;27&quot;</span><span class="kw">&gt;</span>
+
+      Any text here will show up as a grading comment in
+      Canvas. Newlines will be retained, but most other formatting
+      will be lost :(
+      
+      Nice work STUDENT NAME!
+      
+      TOTAL: 27/32
+
+    <span class="kw">&lt;/grade&gt;</span></code></pre></div>
+<h2 id="generate_form_webcat.py"><code>generate_form_webcat.py</code></h2>
+<p>This script generates an XML grade submission form that pulls data from both a Canvas .csv grade file and a &quot;Fully-detailed Web-CAT CSV&quot;.</p>
+<p>Example:</p>
+<div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">./generate_form_webcat.py</span> 31_Jan_16_24_Grades-CS159_0005_SP17.csv \
+  8459169 CS159-PA1C.csv -d <span class="st">&#39;01/27/17 23:00PM&#39;</span> -s 10,1,2 <span class="kw">&gt;</span> form.xml</code></pre></div>
+<h2 id="submit_form.py"><code>submit_form.py</code></h2>
+<p>Script for uploading XML grading forms containing numeric grade information and comments.</p>
+<h2 id="canvas_util.py"><code>canvas_util.py</code></h2>
+<p>Utility code for posting grade information through the Canvas API. No need to interact with this directly.</p>
