@@ -14,7 +14,7 @@ def canvas_csv_to_numpy(file_name, skip_rows=0):
     csv_np = np.array(data[skip_rows:], dtype=str)
     if np.sum(csv_np[1,:] == "Muted") > 0:
         csv_np = np.delete(csv_np, (1), axis=0)
-    return np.array(csv_np[skip_rows:], dtype=str)
+    return csv_np
 
 def assignment_info(canvas_csv, assignment_id):
     """ return a (name, max_points) tuple for this assignment id """

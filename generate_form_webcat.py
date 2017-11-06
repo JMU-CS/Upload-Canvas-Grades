@@ -22,7 +22,7 @@ TOTAL = 10
 
 def load_webcat_data(webcat_csv):
     """ Create a dictionary that maps from eids to lists with webcat data"""
-    table = generate_form.csv_to_numpy(webcat_csv, FIRST_ROW)
+    table = generate_form.canvas_csv_to_numpy(webcat_csv, FIRST_ROW)
 
     data = {}
     for i in range(table.shape[0]):
