@@ -8,9 +8,11 @@ from datetime import datetime
 import sys
 import csv
 
-def canvas_csv_to_numpy(file_name, skip_rows=0):
+def csv_to_numpy(file_name, skip_rows=0):
     handle = open(file_name, 'r')
     data = list(csv.reader(handle, delimiter=',', quotechar='"'))
+    # remove empty rows:
+    data = [row for row in data if len(row) > 0]
     csv_np = np.array(data[skip_rows:], dtype=str)
     if np.sum(csv_np[1,:] == "Muted") > 0:
         csv_np = np.delete(csv_np, (1), axis=0)
@@ -18,7 +20,7 @@ def canvas_csv_to_numpy(file_name, skip_rows=0):
 
 def assignment_info(canvas_csv, assignment_id):
     """ return a (name, max_points) tuple for this assignment id """
-    data = canvas_csv_to_numpy(canvas_csv)
+    data = csv_to_numpy(canvas_csv)
     for i in range(data.shape[1]):
         if assignment_id in data[0, i]:
             return (data[0, i], float(data[1, i]))
@@ -27,7 +29,7 @@ def assignment_info(canvas_csv, assignment_id):
 def load_canvas_ids(canvas_csv):
     """ Create a dictionary that maps from eids to (name, canvas_id) tuples."""
 
-    table = canvas_csv_to_numpy(canvas_csv)
+    table = csv_to_numpy(canvas_csv)
     data = {}
     for i in range(2, table.shape[0]):
         data[table[i, 2]] = (table[i, 0], table[i, 1])
