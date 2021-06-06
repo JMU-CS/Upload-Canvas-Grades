@@ -7,9 +7,11 @@ https://canvas.beta.instructure.com/doc/api/submissions.html#method.submissions_
 
 """
 import sys
-import urllib
+import urllib 
+from urllib.parse import urlencode
+from urllib.request import Request,urlopen
+from urllib.error import URLError
 import time
-import urllib2
 
 class GradePoster(object):
 
@@ -26,27 +28,44 @@ class GradePoster(object):
         form_data[grade_key] = grade
 
         if comment != "":
+            #print('adding comment:', comment)
             comment_key = 'grade_data[{}][text_comment]'.format(student_id)
             form_data[comment_key] = comment
 
-        data = urllib.urlencode(form_data)
+        data = urlencode(form_data).encode('utf-8')
+        #print('self url is:', self.url)
+        #print(data)
         header = {"Authorization" : "Bearer {}".format(self.key)}
-        request = urllib2.Request(self.url, data, headers=header)
+        #print(header)
+        request = urllib.request.Request(self.url, data, headers=header)
+        #print('request is:')
+        #print(request)
+        #print ('-----')
         attempt_count = 0
         while attempt_count < 4:
             try:
-                return urllib2.urlopen(request)
-            except urllib2.URLError as e:
-                print "URL ERROR, trying again " + str(e)
+                #return urllib2.urlopen(request)
+                #return urllib.request.urlopen(request)
+                return urlopen(request)
+            except URLError as e:
+                print( "URL ERROR, trying again " + str(e))
                 time.sleep(.5)
                 attempt_count += 1
-        print "Giving up."
+        print("Giving up.")
 
 
+"""
+The code below is ONLY for testing the above API
+and is not run during the normal posting events
+If you want to test changes to this module, change
+the course_id, assignment_id, and student_id (test student is
+a good one to test with).
+"""
 if __name__ == "__main__":
-    COURSE_ID = "1464214"
-    ASSIGNMENT_ID = "8297096"
-    student_id = "5449287"
+    COURSE_ID = "1744815"
+    ASSIGNMENT_ID = "12338724"
+    student_id = "5745951"
     gp = GradePoster(COURSE_ID, ASSIGNMENT_ID, sys.argv[1])
+    print('running this')
     response = gp.post_grade_update(student_id, "101.5", "Awesome Job!")
-    print response.read()
+    print(response.read())

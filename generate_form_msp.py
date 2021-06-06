@@ -56,7 +56,8 @@ class AutoLabForm(generate_form.CanvasForm):
             for student_data, ex_name in zip(self.student_dicts, self.ex_names):
                 cur_score = student_data[eid][self.table_headers['Total']]
                 comments += ex_name + ": "
-                if cur_score == "not_submitted":
+                if cur_score == "not_submitted" or \
+                   cur_score == "not_yet_submitted":
                     comments += "No Autolab submission.\n"
                     cur_score = "0"
                 else:
