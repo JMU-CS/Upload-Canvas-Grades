@@ -14,7 +14,8 @@ def csv_to_numpy(file_name, skip_rows=0):
     # remove empty rows:
     data = [row for row in data if len(row) > 0]
     csv_np = np.array(data[skip_rows:], dtype=str)
-    if np.sum(csv_np[1,:] == "Muted") > 0:
+    if (np.sum(csv_np[1,:] == "Muted") > 0
+               or np.sum(csv_np[1,:] == "Manual Posting") > 0):
         csv_np = np.delete(csv_np, (1), axis=0)
     return csv_np
 
