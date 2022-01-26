@@ -12,20 +12,29 @@ from datetime import datetime
 import sys
 import csv
 
-def csv_to_numpy(file_name, skip_rows=0):
+def pad_row(row, length):
+    return row + ['']*(length - len(row))
+
+def csv_to_numpy(file_name, skip_rows=0, pad=False):
     handle = open(file_name, 'r')
     data = list(csv.reader(handle, delimiter=',', quotechar='"'))
     # remove empty rows:
     data = [row for row in data if len(row) > 0]
+
+    if pad:
+        # pad rows that are too short (Gradescope, for example returns a non-square array in its CSV)
+        max_length = max([len(row) for row in data])
+        data = [pad_row(row, max_length) for row in data]
+
     csv_np = np.array(data[skip_rows:], dtype=str)
     if (np.sum(csv_np[1,:] == "Muted") > 0
                or np.sum(csv_np[1,:] == "Manual Posting") > 0):
         csv_np = np.delete(csv_np, (1), axis=0)
     return csv_np
 
-def assignment_info(canvas_csv, assignment_id):
+def assignment_info(canvas_csv, assignment_id, pad=False):
     """ return a (name, max_points) tuple for this assignment id """
-    data = csv_to_numpy(canvas_csv)
+    data = csv_to_numpy(canvas_csv, pad=pad)
     if data[1,0].strip() == "Points Possible":
         points_row = 1
     else:
@@ -37,10 +46,10 @@ def assignment_info(canvas_csv, assignment_id):
 
     raise LookupError("No such assignment ID: {}".format(assignment_id))
 
-def load_canvas_ids(canvas_csv):
+def load_canvas_ids(canvas_csv, pad=False):
     """ Create a dictionary that maps from eids to (name, canvas_id) tuples."""
 
-    table = csv_to_numpy(canvas_csv)
+    table = csv_to_numpy(canvas_csv, pad=pad)
     data = {}
     # if header is longer, start at 3 (instead of 2) Kevin Molloy change
     if table[1,0].strip() == "Points Possible":
@@ -54,11 +63,11 @@ def load_canvas_ids(canvas_csv):
 
 class CanvasForm(object):
 
-    def __init__(self, canvas_csv, assignment_id):
+    def __init__(self, canvas_csv, assignment_id, pad=False):
         self.canvas_csv = canvas_csv
         self.assignment_id = assignment_id
-        self.canvas_data = load_canvas_ids(self.canvas_csv)
-        info = assignment_info(self.canvas_csv, self.assignment_id)
+        self.canvas_data = load_canvas_ids(self.canvas_csv, pad=pad)
+        info = assignment_info(self.canvas_csv, self.assignment_id, pad=pad)
         self.assignment_name = info[0]
         self.max_score = info[1]
 
