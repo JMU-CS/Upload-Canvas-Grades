@@ -5,8 +5,8 @@ uploaded to Canvas.
 This script can be used when a single Canvas grade should be the sum
 of multiple Autolab grades.
 
-Author: Nathan Sprague
-Version: 9/3/2019
+Author: Nathan Sprague + Phil Riley
+Version: 1/27/2022
 
 """
 import argparse
@@ -39,16 +39,19 @@ class GradescopeForm(generate_form.CanvasForm):
 
             autolab_table = generate_form.csv_to_numpy(autolab_csv, pad=True)
 
-            cur_entries = {}
-            for i in range(1, autolab_table.shape[0], 1):
-                eid = autolab_table[i, 3].split('@')[0]
-                cur_entries[eid] = list(autolab_table[i, :])
-            self.student_dicts.append(cur_entries)
-
             cur_headers = {}
             for col in range(autolab_table.shape[1]):
                 cur_headers[autolab_table[0, col].strip(':')] = col
             self.table_headers.append(cur_headers)
+
+            cur_entries = {}
+            email_col = cur_headers['Email']
+            for i in range(1, autolab_table.shape[0], 1):
+                eid = autolab_table[i, email_col].split('@')[0]
+                cur_entries[eid] = list(autolab_table[i, :])
+            self.student_dicts.append(cur_entries)
+
+
 
 
     def generate_comments(self, eid):
