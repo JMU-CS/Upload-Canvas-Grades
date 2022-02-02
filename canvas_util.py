@@ -9,9 +9,66 @@ https://canvas.beta.instructure.com/doc/api/submissions.html#method.submissions_
 import sys
 import urllib 
 from urllib.parse import urlencode
-from urllib.request import Request,urlopen
+from urllib.request import Request, urlopen
 from urllib.error import URLError
 import time
+import json
+
+
+import sys
+import pathlib
+
+# https://stackoverflow.com/a/61901696
+def get_datadir() -> pathlib.Path:
+
+    """
+    Returns a parent directory path
+    where persistent application data can be stored.
+
+    # linux: ~/.local/share
+    # macOS: ~/Library/Application Support
+    # windows: C:/Users/<USER>/AppData/Roaming
+    """
+
+    home = pathlib.Path.home()
+
+    if sys.platform == "win32":
+        return home / "AppData/Roaming"
+    elif sys.platform == "linux":
+        return home / ".local/share"
+    elif sys.platform == "darwin":
+        return home / "Library/Application Support"
+
+def get_config(config_name):
+    """Return the Path object for the config file, creating an empty file
+    if it doesn't already exist.
+
+    """
+    config_dir = get_datadir() / "jmu_canvas_uploader"
+    try:
+        config_dir.mkdir(parents=True)
+    except FileExistsError:
+        pass
+    config_path = config_dir / config_name
+
+    if not config_path.is_file():
+        config_path.touch()
+
+    return config_path
+
+
+    
+def get_course_info(course_id, key):
+    url = f"https://canvas.jmu.edu/api/v1/courses/{course_id}"
+    header = {"Authorization" : "Bearer {}".format(key)}
+    request = urllib.request.Request(url, None, headers=header)
+    return json.loads(urlopen(request).read())
+
+def get_assignment_info(course_id, assignment_id, key):
+    url = f"https://canvas.jmu.edu/api/v1/courses/{course_id}/assignments/{assignment_id}"
+    header = {"Authorization" : "Bearer {}".format(key)}
+    request = urllib.request.Request(url, None, headers=header)
+    return json.loads(urlopen(request).read())
 
 class GradePoster(object):
 
@@ -62,10 +119,6 @@ the course_id, assignment_id, and student_id (test student is
 a good one to test with).
 """
 if __name__ == "__main__":
-    COURSE_ID = "1744815"
-    ASSIGNMENT_ID = "12338724"
-    student_id = "5745951"
-    gp = GradePoster(COURSE_ID, ASSIGNMENT_ID, sys.argv[1])
-    print('running this')
-    response = gp.post_grade_update(student_id, "101.5", "Awesome Job!")
-    print(response.read())
+    get_config("config.ini")
+    
+    print(get_assignment_info( '1848558','15003267', sys.argv[1])['name'])

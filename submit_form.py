@@ -1,7 +1,22 @@
 #! /usr/bin/env python
 """
-Usage:
-submit_form.py --inputFile FORM_XML --courseId COURSE_ID [-keyFile filename | -key key]
+usage: submit_form.py [-h] [--course-id COURSE_ID] [--key-file KEY_FILE] [--key KEY] [-y] GRADE_FORM
+
+
+Submit Grades. Course id and oauth key will be read from a config file
+if not provided. The config file will be updated if they are provided.
+
+positional arguments:
+  GRADE_FORM            XML file of grades and comments
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --course-id COURSE_ID
+                        Canvas course id
+  --key-file KEY_FILE   file that contains your Canvas key (oauth)
+  --key KEY             your Canvas key (oauth)
+  -y, --yes             Automatic yes to prompts
+
 """
 
 from xml.dom import minidom
@@ -9,6 +24,7 @@ import sys
 import canvas_util
 import re
 import argparse
+import configparser
 
 def add_escapes(document, tag_name="grade"):
     """Hacky method to escape any special characters inside the <grade>
@@ -40,23 +56,23 @@ def add_escapes(document, tag_name="grade"):
     return result
 
 def read_parms():
-    parser = argparse.ArgumentParser(description='Submit Grades')
+    help_text = """ Submit Grades.  Course id and oauth key will be read from a config
+    file if not provided.  The config file will be updated if they are
+    provided."""
+    parser = argparse.ArgumentParser(description=help_text)
 
-    parser.add_argument('--inputFile', action='store',
-                        dest='form_filename', default="", required=True,
+    parser.add_argument("grade_form",  metavar="GRADE_FORM",
                         help='XML file of grades and comments')
 
-    parser.add_argument('--courseId', action='store',type=int,
-                        dest='course_id', default="", required=True,
-                        help='Canvas course id')
+    parser.add_argument('--course-id', help='Canvas course id')
 
-    parser.add_argument('--keyFile', action='store',
-                        dest='key_filename',
+    parser.add_argument('--key-file', 
                         help='file that contains your Canvas key (oauth)')
 
-    parser.add_argument('--key', action='store',
-                        dest='key',
-                        help='your Canvas key (oauth)')
+    parser.add_argument('--key', help='your Canvas key (oauth)')
+
+    parser.add_argument('-y', '--yes', action='store_true',
+                        help="Automatic yes to prompts")
 
     return parser.parse_args()
 
@@ -67,17 +83,41 @@ def read_key(filename):
 
 def main():
     parms = read_parms()
+    
+    config_path = canvas_util.get_config('config.ini')
 
-    if parms.key is None and parms.key_filename is None:
-        print('Must specify either a key or a key filename')
+    config = configparser.ConfigParser()
+    config.read(config_path)
+
+    if parms.key is None and parms.key_file is None and 'key' not in config['DEFAULT']:
+        
+        print('No default key is cached. Must specify either a key or a key filename')
         sys.exit(0)
 
-    if (parms.key_filename):
-        key = read_key(parms.key_filename)
-    else:
-        key = parms.key
+    update = False
+    if parms.key_file is not None:
+        config['DEFAULT']['key'] = read_key(parms.key_file)
+        update = True
+    elif parms.key is not None:
+        config['DEFAULT']['key'] = parms.key
+        update = True
 
-    handle = open(parms.form_filename, 'r')
+
+    if parms.course_id is None and 'course_id' not in config['DEFAULT']:
+        print('No default course id is cached. Must provide --course-id')
+        sys.exit(0)
+
+    if parms.course_id is not None:
+        config['DEFAULT']['course_id'] = parms.course_id
+        update = True
+
+    if update:
+        print(f"Updating {config_path}")
+        with open(config_path, 'w') as configfile:
+            config.write(configfile)
+        
+
+    handle = open(parms.grade_form, 'r')
     document = handle.read()
     document = add_escapes(document)
 
@@ -88,7 +128,23 @@ def main():
 
     grade_elements = dom.getElementsByTagName('grade')
 
-    gp = canvas_util.GradePoster(parms.course_id, assignment_id, key)
+    gp = canvas_util.GradePoster(config['DEFAULT']['course_id'], assignment_id,
+                                 config['DEFAULT']['key'])
+
+    assigment_info = canvas_util.get_assignment_info(config['DEFAULT']['course_id'],
+                                                     assignment_id,
+                                                     config['DEFAULT']['key'])
+    course_info = canvas_util.get_course_info(config['DEFAULT']['course_id'],
+                                              config['DEFAULT']['key'])
+
+
+    print('About to upload: "{}" to "{}"'.format(assigment_info['name'],
+                                             course_info['name']))
+
+    if parms.yes is False:
+        ok = input("OK? (Y/n): ")
+        if len(ok) != 0 and not ok.lower().startswith("y"):
+            sys.exit(0)
 
     for grade in grade_elements:
         canvas_id = grade.getAttribute('canvas_id')
