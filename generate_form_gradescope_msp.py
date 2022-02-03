@@ -21,8 +21,8 @@ def days_late(late_str):
     if len(late_str) == 0:
         return 0
 
-    days, hours, mins = (int(s) for s in late_str.split(":"))
-    late_time_in_days = days + hours / 24 + mins / 1440 - LATE_SLACK
+    hours, mins, seconds = (int(s) for s in late_str.split(":"))
+    late_time_in_days = hours/24 + mins / 1440 + seconds / 86400 - LATE_SLACK
     return int(math.floor(late_time_in_days + 1))
 
 
