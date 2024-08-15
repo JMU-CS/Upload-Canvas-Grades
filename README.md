@@ -27,19 +27,6 @@ Any grading comments should be placed between the open and close
 	</grade>
 ```
 
-##   `generate_form_webcat.py`
-
-This script generates an XML grade submission form that pulls data
-from both a Canvas .csv grade file and a "Fully-detailed Web-CAT
-CSV".
-
-Example: 
-
-```bash
-$ ./generate_form_webcat.py 31_Jan_16_24_Grades-CS159_0005_SP17.csv \
-  8459169 CS159-PA1C.csv -d '01/27/17 23:00PM' -s 10,1,2 > form.xml
-```
-
 ##   `submit_form.py`
 
 Script for uploading XML grading forms containing numeric grade
