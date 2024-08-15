@@ -17,13 +17,18 @@ import math
 
 LATE_SLACK = .01 # about 14 minutes
 
-def days_late(late_str):
+
+def late_time_in_days(late_str):
     if len(late_str) == 0:
         return 0
 
     hours, mins, seconds = (int(s) for s in late_str.split(":"))
-    late_time_in_days = hours/24 + mins / 1440 + seconds / 86400 - LATE_SLACK
-    return int(math.floor(late_time_in_days + 1))
+    return hours/24 + mins / 1440 + seconds / 86400
+    
+def days_late(late_str):
+
+    late_time = late_time_in_days(late_str) - LATE_SLACK
+    return int(math.floor(late_time + 1))
 
 
 def gradescope_assignment_name(filename):
